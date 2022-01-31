@@ -230,7 +230,7 @@ def main():
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-    st.sidebar.image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\logo.png'), use_column_width=True)
+    st.sidebar.image(Image.open('.\\lettres\\logo.png'), use_column_width=True)
     choix_table = st.sidebar.radio(' ', ('V-sion', 'Entraînez-vous', 'L\'alphabet', 'Notre équipe'))
 
     if choix_table == 'V-sion':
@@ -279,9 +279,9 @@ def main():
         for i in range(1,3): # number of rows in your table! = 2
             cols = st.columns(3) # number of columns in each row! = 2
             # first column of the ith row
-            cols[0].image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\' + list(string.ascii_lowercase)[k] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k])
-            cols[1].image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\' + list(string.ascii_lowercase)[k+1] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+1])
-            cols[2].image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\' + list(string.ascii_lowercase)[k+2] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+2])
+            cols[0].image(Image.open('.\\lettres\\' + list(string.ascii_lowercase)[k] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k])
+            cols[1].image(Image.open('.\\lettres\\' + list(string.ascii_lowercase)[k+1] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+1])
+            cols[2].image(Image.open('.\\lettres\\' + list(string.ascii_lowercase)[k+2] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+2])
             k+=3
         # st.image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\a.png'), caption='Lettre A')
 
