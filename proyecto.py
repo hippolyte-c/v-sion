@@ -221,6 +221,15 @@ def main():
 
     st.set_page_config(page_title="V-sion")
 
+    hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
     st.sidebar.image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\logo.png'), use_column_width=True)
     choix_table = st.sidebar.radio(' ', ('V-sion', 'Entraînez-vous', 'L\'alphabet', 'Notre équipe'))
 
