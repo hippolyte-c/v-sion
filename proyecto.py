@@ -7,7 +7,7 @@ import time
 import mediapipe as mp
 import tensorflow as tf
 import streamlit as st
-# from streamlit_webrtc import webrtc_streamer
+from streamlit_webrtc import webrtc_streamer
 from PIL import Image
 
 import string
@@ -107,6 +107,17 @@ def lerp(n, start1, stop1, start2, stop2):
     return (n - start1) / (stop1 - start1) * (stop2 - start2) + start2
 
 
+def reproduire(lettre, x):
+    x.empty()
+
+    lettres = ['U', 'V', 'W', 'Y', 'Z']
+    all = [x for x in ['U', 'V', 'W', 'Y', 'Z'] if x != lettre]
+    choix = random.choice(all)
+
+    x.info("Lettre à reproduire : " + choix)
+
+    return 1, choix
+
 # @st.cache
 def hands_detection():
     model.load_weights('action_UVWYZ_full.h5')
@@ -115,14 +126,19 @@ def hands_detection():
     sentence = []
     predictions = []
     threshold = 0.98
-    
+
     run = st.checkbox('Run')
     FRAME_WINDOW = st.image([])
-    cap = cv2.VideoCapture(-1)
+    cap = cv2.VideoCapture(0)
+
+    repro = 0
+    lettre = ""
+
+    x = st.empty()
 
     # Set mediapipe model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-        while cap.isOpened():
+        while run:
             pt1 = (0,0)
             pt2 = (0,0)
             # Read feed
@@ -183,12 +199,16 @@ def hands_detection():
             #3. Viz logic
                 if np.unique(predictions[-10:])[0]==np.argmax(res):
                     if res[np.argmax(res)] > threshold:
-
                         if len(sentence) > 0:
                             if actions[np.argmax(res)] != sentence[-1]:
                                 sentence.append(actions[np.argmax(res)])
+                                # st.markdown(sentence[-1])
+
                         else:
                             sentence.append(actions[np.argmax(res)])
+                            # st.markdown(sentence[-1])
+                        if(sentence[-1] == lettre):
+                            repro = 0
 
                 if len(sentence) > 5:
                     sentence = sentence[-5:]
@@ -199,10 +219,7 @@ def hands_detection():
 
 
             #cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
-            cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-            if(sentence):
-                st.markdown(sentence)
-
+            # cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
             FRAME_WINDOW.image(image)
             # Show to screen
@@ -211,6 +228,9 @@ def hands_detection():
             # Break gracefully
             # if cv2.waitKey(10) & 0xFF == ord('q'):
             #     break
+
+            if(not repro):
+                repro, lettre = reproduire(lettre, x)
 
         cap.release()
         cv2.destroyAllWindows()
@@ -227,11 +247,10 @@ def main():
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
-
     """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    st.markdown(hide_streamlit_style,unsafe_allow_html=True)
 
-    st.sidebar.image(Image.open('./lettres/logo.png'), use_column_width=True)
+    st.sidebar.image(Image.open('C:\\Users\\Hippolyte\\Desktop\\PFE\\v0.9\\images\\logo.png'), use_column_width=True)
     choix_table = st.sidebar.radio(' ', ('V-sion', 'Entraînez-vous', 'L\'alphabet', 'Notre équipe'))
 
     if choix_table == 'V-sion':
@@ -253,8 +272,6 @@ def main():
         st.title("Entraînez-vous")
         # webrtc_streamer(key="loopback")
         hands_detection()
-
-        st.info("Suite de lettres à reproduire")
 
         # un = ["a", "b", "c", "d", "e"]
         # deux = ["f", "g", "h", "i", "j"]
@@ -280,9 +297,9 @@ def main():
         for i in range(1,3): # number of rows in your table! = 2
             cols = st.columns(3) # number of columns in each row! = 2
             # first column of the ith row
-            cols[0].image(Image.open('./lettres/' + list(string.ascii_lowercase)[k] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k])
-            cols[1].image(Image.open('./lettres/' + list(string.ascii_lowercase)[k+1] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+1])
-            cols[2].image(Image.open('./lettres/' + list(string.ascii_lowercase)[k+2] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+2])
+            cols[0].image(Image.open('C:\\Users\\Hippolyte\\Desktop\\PFE\\v0.9\\images\\' + list(string.ascii_lowercase)[k] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k])
+            cols[1].image(Image.open('C:\\Users\\Hippolyte\\Desktop\\PFE\\v0.9\\images\\' + list(string.ascii_lowercase)[k+1] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+1])
+            cols[2].image(Image.open('C:\\Users\\Hippolyte\\Desktop\\PFE\\v0.9\\images\\' + list(string.ascii_lowercase)[k+2] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+2])
             k+=3
         # st.image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\a.png'), caption='Lettre A')
 
