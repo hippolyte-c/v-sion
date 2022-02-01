@@ -9,6 +9,7 @@ from PIL import Image
 
 import string
 import random
+import glob
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
@@ -77,9 +78,10 @@ def lerp(n, start1, stop1, start2, stop2):
     return (n - start1) / (stop1 - start1) * (stop2 - start2) + start2
 
 
-def load_model(lettre, text):
+def load_model(lettre, text, lettres_from_modeles):
 
-    x = random.choice(['PQRST', 'KLMNO', 'UVWYZ'])
+
+    x = random.choice(lettres_from_modeles)
 
     text.empty()
 
@@ -106,6 +108,11 @@ def load_model(lettre, text):
 
 def hands_detection():
 
+    lettres_from_modeles = []
+
+    for file in glob.glob("./modeles/*.h5"):
+        lettres_from_modeles.append(file.split("_")[1])
+
     modele = 0
     actions = 0
         # 1. New detection variables
@@ -127,7 +134,7 @@ def hands_detection():
         while run:
 
             if(not modele):
-                model, actions, lettre, modele = load_model(lettre, text)
+                model, actions, lettre, modele = load_model(lettre, text, lettres_from_modeles)
 
             pt1 = (0,0)
             pt2 = (0,0)
