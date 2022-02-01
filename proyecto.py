@@ -121,7 +121,7 @@ def hands_detection():
     predictions = []
     threshold = 0.98
 
-    run = st.checkbox('Run')
+    run = st.checkbox('C\'est parti !')
     FRAME_WINDOW = st.image([])
     cap = cv2.VideoCapture(0)
 
