@@ -1,9 +1,7 @@
 from unittest import result
 import cv2
 import numpy as np
-import os
 from matplotlib import pyplot as plt
-import time
 import mediapipe as mp
 import tensorflow as tf
 import streamlit as st
@@ -14,7 +12,6 @@ import random
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import TensorBoard
 
 
 mpHands = mp.solutions.hands
@@ -43,32 +40,6 @@ def extract_keypoints(results):
     lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
     rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
     return np.concatenate([pose,lh,rh])
-
-
-# actions = np.array(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'])
-actions = np.array(['U','V','W','Y','Z'])
-
-#actions = np.array(['hello', 'thanks', 'iloveyou'])
-#actions = np.array(['A','B','bye','C','D','E','F','G','H','hello','I','iloveyou','J','K','L','M','N','Nothing','O','P','Q','R','S','T','thanks','U','V','W','X','Y','Z'])
-
-
-model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(15,258)))
-model.add(LSTM(128, return_sequences=True, activation='relu'))
-model.add(LSTM(64, return_sequences=False, activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(actions.shape[0], activation='softmax'))
-
-
-colors = [(245,117,16), (117,245,16), (16,117,245)]
-def prob_viz(res, actions, input_frame, colors):
-    output_frame = input_frame.copy()
-    for num, prob in enumerate(res):
-        cv2.rectangle(output_frame, (0,60+num*40), (int(prob*100), 90+num*40), colors[num], -1)
-        cv2.putText(output_frame, actions[num], (0, 85+num*40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-
-    return output_frame
 
 def get_hand_bounding_rect(minX, minY, maxX, maxY, w, h):
     minX *= w
@@ -106,20 +77,37 @@ def lerp(n, start1, stop1, start2, stop2):
     return (n - start1) / (stop1 - start1) * (stop2 - start2) + start2
 
 
-def reproduire(lettre, x):
-    x.empty()
+def load_model(lettre, text):
 
-    lettres = ['U', 'V', 'W', 'Y', 'Z']
-    all = [x for x in ['U', 'V', 'W', 'Y', 'Z'] if x != lettre]
+    x = random.choice(['PQRST', 'KLMNO', 'UVWYZ'])
+
+    text.empty()
+
+    all = [x for x in list(x) if x != lettre]
     choix = random.choice(all)
 
-    x.info("Lettre à reproduire : " + choix)
+    text.info("Lettre à reproduire : " + choix)
 
-    return 1, choix
+    actions = np.array(list(x))
 
-# @st.cache
+    model = Sequential()
+    model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(15,258)))
+    model.add(LSTM(128, return_sequences=True, activation='relu'))
+    model.add(LSTM(64, return_sequences=False, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(actions.shape[0], activation='softmax'))
+
+    print(x)
+    model.load_weights('action_' + x + '_full.h5')
+
+    return model, actions, choix, 1
+
+
 def hands_detection():
-    model.load_weights('action_UVWYZ_full.h5')
+
+    modele = 0
+    actions = 0
         # 1. New detection variables
     sequence = []
     sentence = []
@@ -130,14 +118,17 @@ def hands_detection():
     FRAME_WINDOW = st.image([])
     cap = cv2.VideoCapture(0)
 
-    repro = 0
     lettre = ""
 
-    x = st.empty()
+    text = st.empty()
 
     # Set mediapipe model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while run:
+
+            if(not modele):
+                model, actions, lettre, modele = load_model(lettre, text)
+
             pt1 = (0,0)
             pt2 = (0,0)
             # Read feed
@@ -207,29 +198,13 @@ def hands_detection():
                             sentence.append(actions[np.argmax(res)])
                             # st.markdown(sentence[-1])
                         if(sentence[-1] == lettre):
-                            repro = 0
+                            modele = 0
 
                 if len(sentence) > 5:
                     sentence = sentence[-5:]
 
-                # Viz probabilities
-                #image = prob_viz(res, actions, image, colors)
-
-
-
-            #cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
-            # cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             FRAME_WINDOW.image(image)
-            # Show to screen
-            #cv2.imshow('OpenCV Feed', image)
-
-            # Break gracefully
-            # if cv2.waitKey(10) & 0xFF == ord('q'):
-            #     break
-
-            if(not repro):
-                repro, lettre = reproduire(lettre, x)
 
         cap.release()
         cv2.destroyAllWindows()
@@ -263,29 +238,14 @@ def main():
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Précision", "99%")
-        col2.metric("Alphabet", "26 lettres")
+        col2.metric("Alphabet", "26 lettres", "Bientôt des mots")
         # col3.metric("Humidity", "86%", "4%")
 
     elif choix_table == 'Entraînez-vous':
 
         st.title("Entraînez-vous")
-        # webrtc_streamer(key="loopback")
         hands_detection()
 
-        # un = ["a", "b", "c", "d", "e"]
-        # deux = ["f", "g", "h", "i", "j"]
-        # total = [un, deux]
-        #
-        # if 'suite' not in st.session_state:
-        #     st.session_state.suite = []
-        #
-        # def x():
-        #     st.session_state.suite.append(total[random.randint(0,1)])
-        #
-        #     for e in st.session_state.suite:
-        #         st.text(e)
-        #
-        # st.button("a", on_click=x())
 
     elif choix_table == 'L\'alphabet':
 
@@ -300,14 +260,13 @@ def main():
             cols[1].image(Image.open('./lettres/' + list(string.ascii_lowercase)[k+1] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+1])
             cols[2].image(Image.open('./lettres/' + list(string.ascii_lowercase)[k+2] + '.png'), use_column_width=True, caption='Lettre '+list(string.ascii_uppercase)[k+2])
             k+=3
-        # st.image(Image.open('C:\\Users\\hippo\\Desktop\\PFE_V-sion\\lettres\\a.png'), caption='Lettre A')
 
     elif choix_table == 'Notre équipe':
 
         st.title("Notre équipe")
-        st.text("Nous sommes 5 étudiants")
+        st.markdown("Nous sommes 5 étudiants ingénieurs de l'ECE qui portont nos connaissances en informatique et en intelligence artificielle pour faciliter l'accès à l'apprentissage.")
         st.header("Nous contacter")
-        st.text("Contact ?")
+        st.markdown("Vous pouvez nous contacter à l'adresse mail v-sion@gmail.com")
 
 if __name__ == '__main__':
     main()
