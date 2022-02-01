@@ -7,7 +7,6 @@ import time
 import mediapipe as mp
 import tensorflow as tf
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer
 from PIL import Image
 
 import string
