@@ -118,7 +118,7 @@ def hands_detection():
     
     run = st.checkbox('Run')
     FRAME_WINDOW = st.image([])
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(-1)
 
     # Set mediapipe model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
