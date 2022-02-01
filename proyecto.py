@@ -99,7 +99,7 @@ def load_model(lettre, text):
     model.add(Dense(actions.shape[0], activation='softmax'))
 
     print(x)
-    model.load_weights('action_' + x + '_full.h5')
+    model.load_weights('./modeles/action_' + x + '_full.h5')
 
     return model, actions, choix, 1
 
